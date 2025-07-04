@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار API إشعارات الفيديو</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+            direction: rtl;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .test-section h3 {
+            color: #666;
+            margin-top: 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .video-btn {
+            background-color: #e74c3c;
+        }
+        .video-btn:hover {
+            background-color: #c0392b;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .video-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+        }
+        .video-thumbnail {
+            width: 120px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-left: 15px;
+        }
+        .video-info {
+            display: inline-block;
+            vertical-align: top;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 اختبار API إشعارات الفيديو</h1>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalChecks">0</div>
+                <div>إجمالي الفحوصات</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="foundVideos">0</div>
+                <div>فيديوهات جديدة</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalNotifications">0</div>
+                <div>إجمالي الإشعارات</div>
+            </div>
+        </div>
+
+        <!-- البحث عن فيديوهات جديدة -->
+        <div class="test-section">
+            <h3>🔍 البحث عن فيديوهات جديدة</h3>
+            <button onclick="checkNewVideos(1)">آخر ساعة</button>
+            <button onclick="checkNewVideos(6)">آخر 6 ساعات</button>
+            <button onclick="checkNewVideos(24)">آخر 24 ساعة</button>
+            <button onclick="checkNewVideos(168)">آخر أسبوع</button>
+            <div id="checkResult" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- جلب إشعارات المستخدم -->
+        <div class="test-section">
+            <h3>📱 جلب إشعارات المستخدم</h3>
+            <button onclick="getUserNotifications(1)">مستخدم 1</button>
+            <button onclick="getUserNotifications(2)">مستخدم 2</button>
+            <button onclick="getUserNotifications(null)">جميع المستخدمين</button>
+            <div id="userResult" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- اختبار SQL المباشر -->
+        <div class="test-section">
+            <h3>🗄️ اختبار الاستعلام المباشر</h3>
+            <button onclick="testDirectSQL()">تشغيل SQL</button>
+            <div id="sqlResult" class="result" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let totalChecks = 0;
+        let foundVideos = 0;
+        let totalNotifications = 0;
+
+        function updateStats() {
+            document.getElementById('totalChecks').textContent = totalChecks;
+            document.getElementById('foundVideos').textContent = foundVideos;
+            document.getElementById('totalNotifications').textContent = totalNotifications;
+        }
+
+        async function checkNewVideos(hoursBack) {
+            const resultDiv = document.getElementById('checkResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '🔄 جاري البحث عن فيديوهات جديدة...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`https://albrog.com/api/youtube_notifications.php?action=check_new_videos&hours_back=${hoursBack}`);
+                const data = await response.json();
+
+                totalChecks++;
+                
+                if (data.success) {
+                    const result = data.data;
+                    foundVideos += result.new_notifications || 0;
+                    totalNotifications += result.notifications?.length || 0;
+                    
+                    let output = `✅ نجح البحث!\n\n`;
+                    output += `📊 الإحصائيات:\n`;
+                    output += `- المدة: آخر ${hoursBack} ساعة\n`;
+                    output += `- عدد المشاريع الموجودة: ${result.found_properties}\n`;
+                    output += `- الإشعارات الجديدة: ${result.new_notifications}\n\n`;
+
+                    if (result.notifications && result.notifications.length > 0) {
+                        output += `🎬 الفيديوهات الجديدة:\n\n`;
+                        result.notifications.forEach((notif, index) => {
+                            output += `${index + 1}. ${notif.title}\n`;
+                            output += `   📹 عدد الفيديوهات: ${notif.video_count}\n`;
+                            output += `   🕒 التاريخ: ${notif.created_at}\n`;
+                            if (notif.youtube_ids && notif.youtube_ids.length > 0) {
+                                output += `   🔗 الفيديوهات:\n`;
+                                notif.youtube_ids.forEach(video => {
+                                    output += `      - ${video.video_id}\n`;
+                                });
+                            }
+                            output += `\n`;
+                        });
+                    } else {
+                        output += `ℹ️ لم يتم العثور على فيديوهات جديدة في هذه المدة.`;
+                    }
+
+                    resultDiv.textContent = output;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `❌ خطأ: ${data.error}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `❌ خطأ في الشبكة: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+
+            updateStats();
+        }
+
+        async function getUserNotifications(userId) {
+            const resultDiv = document.getElementById('userResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '🔄 جاري جلب الإشعارات...';
+            resultDiv.className = 'result';
+
+            try {
+                let url = 'https://albrog.com/api/youtube_notifications.php?action=get_user_notifications';
+                if (userId) {
+                    url += `&user_id=${userId}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    const notifications = data.data;
+                    
+                    let output = `✅ تم جلب الإشعارات بنجاح!\n\n`;
+                    output += `📊 العدد الإجمالي: ${notifications.length}\n\n`;
+
+                    if (notifications.length > 0) {
+                        output += `📱 الإشعارات:\n\n`;
+                        notifications.forEach((notif, index) => {
+                            output += `${index + 1}. ${notif.title}\n`;
+                            output += `   📝 الرسالة: ${notif.message}\n`;
+                            output += `   📹 عدد الفيديوهات: ${notif.data?.video_count || 0}\n`;
+                            output += `   📖 مقروء: ${notif.is_read ? 'نعم' : 'لا'}\n`;
+                            output += `   🕒 التاريخ: ${notif.created_at}\n\n`;
+                        });
+                    } else {
+                        output += `ℹ️ لا توجد إشعارات لهذا المستخدم.`;
+                    }
+
+                    resultDiv.textContent = output;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `❌ خطأ: ${data.error}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `❌ خطأ في الشبكة: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testDirectSQL() {
+            const resultDiv = document.getElementById('sqlResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '🔄 تشغيل الاستعلام...';
+            resultDiv.className = 'result';
+
+            // هذا مجرد عرض للاستعلام - في الواقع يتم تنفيذه في PHP
+            const sqlQuery = `
+SELECT DISTINCT
+    p.ID AS post_id,
+    p.post_title,
+    p.post_modified,
+    p.post_date,
+    GROUP_CONCAT(DISTINCT m.meta_value SEPARATOR '|||') AS youtube_videos,
+    COUNT(DISTINCT m.meta_id) AS video_count
+FROM 
+    wp_posts p
+JOIN 
+    wp_postmeta m ON p.ID = m.post_id
+WHERE 
+    p.post_status = 'publish'
+    AND p.post_type = 'post'
+    AND (
+        m.meta_key LIKE '%video%' 
+        OR m.meta_key LIKE '%youtube%'
+        OR m.meta_key LIKE '%_video_file%'
+    )
+    AND (
+        m.meta_value LIKE '%youtube.com%' 
+        OR m.meta_value LIKE '%youtu.be%'
+    )
+    AND p.post_modified >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+GROUP BY p.ID, p.post_title, p.post_modified, p.post_date
+ORDER BY 
+    p.post_modified DESC
+LIMIT 50;
+            `;
+
+            let output = `📝 الاستعلام المستخدم:\n\n${sqlQuery.trim()}\n\n`;
+            output += `ℹ️ هذا الاستعلام يتم تنفيذه داخل PHP للبحث عن:\n`;
+            output += `- المشاريع المنشورة\n`;
+            output += `- التي تحتوي على meta_key يحتوي على 'video'\n`;
+            output += `- والتي تحتوي على روابط يوتيوب\n`;
+            output += `- المحدثة في آخر 24 ساعة\n\n`;
+            output += `🔄 لرؤية النتائج الفعلية، استخدم "البحث عن فيديوهات جديدة"`;
+
+            resultDiv.textContent = output;
+            resultDiv.className = 'result success';
+        }
+
+        // تحديث الإحصائيات عند تحميل الصفحة
+        updateStats();
+
+        // Auto-refresh every 30 seconds for demo
+        setInterval(() => {
+            if (Math.random() > 0.7) { // 30% chance
+                checkNewVideos(1);
+            }
+        }, 30000);
+    </script>
+</body>
+</html> 

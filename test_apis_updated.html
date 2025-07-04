@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار APIs البروج العقاري المحدثة</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            text-align: center; 
+            color: #333; 
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .api-section { 
+            margin-bottom: 40px; 
+            padding: 25px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            background: #f8f9ff;
+        }
+        .api-section h2 { 
+            color: #333; 
+            margin-bottom: 20px;
+        }
+        .form-group { 
+            margin-bottom: 15px; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: 600;
+            color: #555;
+        }
+        input {
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button { 
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white; 
+            padding: 12px 25px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        button:hover { transform: translateY(-2px); }
+        .response { 
+            margin-top: 20px; 
+            padding: 15px; 
+            border-radius: 8px; 
+            border: 1px solid #ddd;
+            background: #fff;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { border-color: #28a745; background: #f8fff9; }
+        .error { border-color: #dc3545; background: #fff8f8; }
+        pre { 
+            white-space: pre-wrap; 
+            word-wrap: break-word;
+            font-size: 14px;
+        }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
+            gap: 20px; 
+        }
+        .endpoint-info {
+            background: #e8f4fd;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            color: #0066cc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏢 اختبار APIs البروج العقاري المحدثة</h1>
+        
+        <div class="grid">
+            <!-- Login API Test -->
+            <div class="api-section">
+                <h2>🔐 تسجيل الدخول</h2>
+                <div class="endpoint-info">POST: api/login.php</div>
+                
+                <div class="form-group">
+                    <label for="email">البريد الإلكتروني:</label>
+                    <input type="email" id="email" placeholder="admin@albrog.com" value="admin@albrog.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">كلمة المرور:</label>
+                    <input type="password" id="password" placeholder="********" value="password123">
+                </div>
+                
+                <button onclick="testLogin()">اختبار تسجيل الدخول</button>
+                <div id="loginResponse" class="response" style="display:none;"></div>
+            </div>
+
+            <!-- Client Dashboard API Test -->
+            <div class="api-section">
+                <h2>👤 لوحة تحكم العميل</h2>
+                <div class="endpoint-info">GET: api/client_dashboard.php?user_id=X</div>
+                
+                <div class="form-group">
+                    <label for="clientUserId">معرف المستخدم:</label>
+                    <input type="number" id="clientUserId" placeholder="1" value="1">
+                </div>
+                
+                <button onclick="testClientDashboard()">اختبار لوحة العميل</button>
+                <div id="clientResponse" class="response" style="display:none;"></div>
+            </div>
+
+            <!-- Investment Dashboard API Test -->
+            <div class="api-section">
+                <h2>💰 لوحة الاستثمار</h2>
+                <div class="endpoint-info">GET: api/investment_dashboard.php?user_id=X</div>
+                
+                <div class="form-group">
+                    <label for="investmentUserId">معرف المستخدم:</label>
+                    <input type="number" id="investmentUserId" placeholder="1" value="1">
+                </div>
+                
+                <button onclick="testInvestmentDashboard()">اختبار لوحة الاستثمار</button>
+                <div id="investmentResponse" class="response" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Test All Button -->
+        <div style="text-align: center; margin-top: 40px;">
+            <button onclick="testAllAPIs()" style="background: linear-gradient(45deg, #28a745, #20c997); font-size: 18px; padding: 15px 30px;">
+                🚀 اختبار جميع APIs
+            </button>
+        </div>
+    </div>
+
+    <script>
+        async function testLogin() {
+            const response = document.getElementById('loginResponse');
+            response.style.display = 'block';
+            response.innerHTML = 'جارٍ الاختبار...';
+
+            try {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                const result = await fetch('api/login.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await result.json();
+                response.className = `response ${data.success ? 'success' : 'error'}`;
+                response.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+
+                if (data.success && data.data && data.data.id) {
+                    document.getElementById('clientUserId').value = data.data.id;
+                    document.getElementById('investmentUserId').value = data.data.id;
+                }
+
+            } catch (error) {
+                response.className = 'response error';
+                response.innerHTML = `<pre>خطأ في الشبكة: ${error.message}</pre>`;
+            }
+        }
+
+        async function testClientDashboard() {
+            const response = document.getElementById('clientResponse');
+            response.style.display = 'block';
+            response.innerHTML = 'جارٍ الاختبار...';
+
+            try {
+                const userId = document.getElementById('clientUserId').value;
+                const result = await fetch(`api/client_dashboard.php?user_id=${userId}`);
+                const data = await result.json();
+                
+                response.className = `response ${data.success ? 'success' : 'error'}`;
+                response.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+
+            } catch (error) {
+                response.className = 'response error';
+                response.innerHTML = `<pre>خطأ في الشبكة: ${error.message}</pre>`;
+            }
+        }
+
+        async function testInvestmentDashboard() {
+            const response = document.getElementById('investmentResponse');
+            response.style.display = 'block';
+            response.innerHTML = 'جارٍ الاختبار...';
+
+            try {
+                const userId = document.getElementById('investmentUserId').value;
+                const result = await fetch(`api/investment_dashboard.php?user_id=${userId}`);
+                const data = await result.json();
+                
+                response.className = `response ${data.success ? 'success' : 'error'}`;
+                response.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+
+            } catch (error) {
+                response.className = 'response error';
+                response.innerHTML = `<pre>خطأ في الشبكة: ${error.message}</pre>`;
+            }
+        }
+
+        async function testAllAPIs() {
+            await testLogin();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testClientDashboard();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testInvestmentDashboard();
+        }
+    </script>
+</body>
+</html> 

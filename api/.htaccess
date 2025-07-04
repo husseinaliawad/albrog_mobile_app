@@ -1,0 +1,24 @@
+RewriteEngine On
+
+# ✅ Enable CORS for all responses
+<IfModule mod_headers.c>
+  Header always set Access-Control-Allow-Origin "*"
+  Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+  Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+</IfModule>
+
+# ✅ Handle Preflight OPTIONS requests with 200 empty response
+RewriteCond %{REQUEST_METHOD} =OPTIONS
+RewriteRule ^(.*)$ - [R=200,L]
+
+# ✅ API URL rewriting for properties endpoints
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule ^properties/featured/?$ properties/featured.php [L,QSA]
+RewriteRule ^properties/recent/?$ properties/recent.php [L,QSA]
+RewriteRule ^properties/search/?$ properties/search.php [L,QSA]
+RewriteRule ^properties/([0-9]+)/?$ properties/single.php?id=$1 [L,QSA]
+
+# ✅ Default fallback to index.php (optional)
+RewriteRule ^(.*)$ index.php [L,QSA]

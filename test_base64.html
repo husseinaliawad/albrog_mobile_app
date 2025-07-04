@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> شركة البروج</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-image { 
+            max-width: 100%; 
+            height: 200px; 
+            object-fit: cover; 
+            border: 2px solid #ddd; 
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .url-box { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            border-radius: 5px; 
+            font-size: 12px; 
+            word-break: break-all;
+            margin: 5px 0;
+        }
+        .status { padding: 5px 10px; border-radius: 3px; margin: 5px 0; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .loading { background: #fff3cd; color: #856404; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 اختبار Base64 API للصور</h1>
+        
+        <h2>📸 اختبار تحويل الصور إلى Base64:</h2>
+        
+        <button onclick="testImage('https://albrog.com/wp-content/uploads/2025/05/210.jpg', 1)">
+            اختبار صورة 210.jpg
+        </button>
+        
+        <button onclick="testImage('https://albrog.com/wp-content/uploads/2025/05/206.jpg', 2)">
+            اختبار صورة 206.jpg
+        </button>
+        
+        <button onclick="testImage('https://albrog.com/wp-content/uploads/2025/05/مشروع-204-بحي-المنار-بجدة-مكبرة-1.jpg', 3)">
+            اختبار صورة عربية
+        </button>
+        
+        <div id="results"></div>
+        
+        <hr>
+        
+        <h2>📋 كيفية عمل الـ API:</h2>
+        <ol>
+            <li>يستقبل رابط الصورة الأصلي</li>
+            <li>يحمل الصورة من الخادم</li>
+            <li>يحولها إلى Base64</li>
+            <li>يرجع Data URL جاهز للاستخدام</li>
+        </ol>
+        
+        <h3>مثال على الاستجابة:</h3>
+        <div class="url-box">
+{
+  "success": true,
+  "data_url": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQ...",
+  "mime_type": "image/jpeg",
+  "size": 123456,
+  "original_url": "https://albrog.com/...",
+  "timestamp": "2025-06-29 17:30:00"
+}
+        </div>
+    </div>
+
+    <script>
+        async function testImage(imageUrl, testNum) {
+            const resultsDiv = document.getElementById('results');
+            
+            // إضافة حالة التحميل
+            const testDiv = document.createElement('div');
+            testDiv.id = `test-${testNum}`;
+            testDiv.innerHTML = `
+                <h3>اختبار ${testNum}: ${imageUrl.split('/').pop()}</h3>
+                <div class="url-box">الرابط الأصلي: ${imageUrl}</div>
+                <div class="status loading">⏳ جاري التحميل...</div>
+            `;
+            resultsDiv.appendChild(testDiv);
+            
+            try {
+                const encodedUrl = encodeURIComponent(imageUrl);
+                const apiUrl = `https://albrog.com/api/image_base64.php?url=${encodedUrl}`;
+                
+                console.log('🔄 Testing:', imageUrl);
+                console.log('📡 API URL:', apiUrl);
+                
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                if (data.success) {
+                    testDiv.innerHTML = `
+                        <h3>✅ اختبار ${testNum}: نجح!</h3>
+                        <div class="url-box">الرابط الأصلي: ${imageUrl}</div>
+                        <div class="status success">
+                            ✅ تم التحويل بنجاح!<br>
+                            📄 نوع الملف: ${data.mime_type}<br>
+                            📏 الحجم: ${(data.size / 1024).toFixed(1)} KB<br>
+                            ⏰ الوقت: ${data.timestamp}
+                        </div>
+                        <img class="test-image" src="${data.data_url}" alt="صورة محولة">
+                    `;
+                } else {
+                    testDiv.innerHTML = `
+                        <h3>❌ اختبار ${testNum}: فشل!</h3>
+                        <div class="url-box">الرابط الأصلي: ${imageUrl}</div>
+                        <div class="status error">
+                            ❌ خطأ: ${data.error}<br>
+                            ⏰ الوقت: ${data.timestamp}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                testDiv.innerHTML = `
+                    <h3>❌ اختبار ${testNum}: خطأ في الاتصال!</h3>
+                    <div class="url-box">الرابط الأصلي: ${imageUrl}</div>
+                    <div class="status error">
+                        ❌ خطأ في الاتصال: ${error.message}
+                    </div>
+                `;
+                console.error('Test error:', error);
+            }
+        }
+    </script>
+</body>
+</html> 
