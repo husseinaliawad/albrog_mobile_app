@@ -1,18 +1,21 @@
-# codemagic.yaml
 workflows:
-  ios-workflow:
-    name: Build iOS app
+  build_ios:
+    name: Build iOS App
     max_build_duration: 60
     environment:
-      vars:
-        XCODE_WORKSPACE: "Runner.xcworkspace"
-        XCODE_SCHEME: "Runner"
+      flutter: stable
+      xcode: latest
     scripts:
-      - name: Install dependencies
+      - name: Get Flutter packages
         script: |
           flutter pub get
-      - name: Build iOS release
+      - name: Install CocoaPods dependencies
         script: |
-          flutter build ios --release
+          cd ios
+          pod install
+      - name: Build for iOS
+        script: |
+          flutter build ios --release --no-codesign
     artifacts:
+      - build/ios/iphoneos/Runner.app
       - build/ios/ipa/*.ipa
